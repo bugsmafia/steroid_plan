@@ -3,7 +3,7 @@
 
 {% block content %}
 <h1>Мои курсы</h1>
-<button id="new-course" class="btn btn-primary mb-3">
+<button id="new_course" class="btn btn-primary mb-3">
     Создать курс
 </button>
 <ul class="list-group">
@@ -22,8 +22,8 @@
 <script src="{% static 'core/js/courses.js' %}"></script>
 <script>
 // Перенаправление на создание
-document.getElementById('new-course').onclick = () => {
-  window.location.href = "{% url 'course_create' %}";
+document.getElementById('new_course').onclick = () => {
+  window.location.href = "{% url 'frontend:course_create' %}";
 };
 </script>
 {% endblock %}
