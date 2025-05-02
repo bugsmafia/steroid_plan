@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Календарь курса</h1>
+<div id="reminder-block"></div>
+<script>
+  async function loadReminders(courseId) {
+    const now = new Date();
+    const today = now.toISOString().slice(0,10);
+    const tomorrowDt = new Date(now.getTime()+24*3600*1000);
+    const tomorrow = tomorrowDt.toISOString().slice(0,10);
+    const resp = await fetch(`/api/course-doses/?course=${courseId}&date=${today}`);
+    const todayDoses = await resp.json();
+    const rb = document.getElementById('reminder-block');
+    if (todayDoses.length) {
+      rb.innerHTML = `<b>Сегодня:</b> ${ todayDoses.map(d=>d.drug.name + ' ' + d.dose_mg + 'mg').join(', ') }`;
+    } else {
+      rb.innerHTML = '<b>Сегодня:</b> приёма нет';
+    }
+    // аналогично для завтра…
+  }
+  loadReminders({{ course.id }});
+</script>
+
+<div id="calendar" style="height: 800px;"></div>
+
+<canvas id="concChart"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  async function drawChart(courseId) {
+    const resp = await fetch(`/api/courses/${courseId}/concentration/`);
+    const data = await resp.json();  // { drug_id: [ {time, conc}, … ], … }
+    const datasets = Object.entries(data).map(([drugId, arr])=>({
+      label: `${arr[0].drug_name}`,  // верните вместе с JSON и имя препарата
+      data: arr.map(p=>({x:p.time, y:p.conc})),
+      fill: false,
+    }));
+    new Chart(document.getElementById('concChart').getContext('2d'), {
+      type: 'line',
+      data: { datasets },
+      options: {
+        scales: {
+          x: { type: 'time', time: { unit: 'day' } },
+          y: { beginAtZero: true }
+        },
+        plugins: { zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' } } }
+      }
+    });
+  }
+  drawChart({{ course.id }});
+</script>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/calendar.js' %}"></script>
+{% endblock %}

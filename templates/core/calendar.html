@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Календарь курса</h1>
+<div id="calendar" style="height: 800px;"></div>
+{% endblock %}
+{% block extra_js %}
+<script>
+  const calendar = new toastui.Calendar('#calendar', {
+    defaultView: 'week',
+    taskView: false,
+  });
+  // Загрузка событий из /api/course-doses/ и добавление:
+  fetch('/api/course-doses/').then(r=>r.json()).then(data=>{
+    const events = data.map(d=>({
+      id: d.id,
+      calendarId: '1',
+      title: `Dose ${d.drug}`,
+      start: d.intake_dt,
+      end: d.intake_dt
+    }));
+    calendar.createSchedules(events);
+  });
+</script>
+{% endblock %}

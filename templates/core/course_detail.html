@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h1>Просмотр курса</h1>
+<div id="reminder-block" class="alert"></div>
+<div id="calendar"></div>
+<canvas id="concChart" width="800" height="400"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/course_detail.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    initCourseDetail({{ course_id }});
+  });
+</script>
+{% endblock %}

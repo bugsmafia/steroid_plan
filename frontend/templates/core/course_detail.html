@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Детали курса</h1>
+<a href="{% url 'course-create' %}?edit={{ course_id }}" class="btn btn-secondary">
+  Редактировать курс
+</a>
+<form id="course-form">
+  <div class="mb-3">
+    <label for="course-name" class="form-label">Название курса</label>
+    <input type="text" id="course-name" class="form-control" value="">
+  </div>
+  <div class="mb-3">
+    <label for="course-description" class="form-label">Описание</label>
+    <textarea id="course-description" class="form-control"></textarea>
+  </div>
+  <div id="doses-list" class="mb-3"></div>
+  <button type="button" id="add-course-dose" class="btn btn-secondary mb-3">Добавить дозу</button>
+  <button type="submit" class="btn btn-primary">Сохранить курс</button>
+</form>
+<canvas id="courseChart" height="100"></canvas>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/courses.js' %}"></script>
+{% endblock %}

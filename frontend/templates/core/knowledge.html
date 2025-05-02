@@ -1,0 +1,22 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>База знаний</h1>
+<div class="row">
+  {% for group in groups %}
+  <div class="col-md-4">
+    <h3>{{ group.name }}</h3>
+    <ul>
+      {% for drug in group.drugs.all %}
+      <li><a href="#">{{ drug.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/knowledge.js' %}"></script>
+{% endblock %}

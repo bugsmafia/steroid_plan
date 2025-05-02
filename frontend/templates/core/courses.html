@@ -1,0 +1,29 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<h1>Мои курсы</h1>
+<button id="new-course" class="btn btn-primary mb-3">
+    Создать курс
+</button>
+<ul class="list-group">
+    {% for course in courses %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="{% url 'course_detail' course.id %}">{{ course.name }}</a>
+        <small class="text-muted">{{ course.created_at|date:"d.m.Y H:i" }}</small>
+      </li>
+    {% empty %}
+      <li class="list-group-item">Нет сохранённых курсов</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'core/js/courses.js' %}"></script>
+<script>
+// Перенаправление на создание
+document.getElementById('new-course').onclick = () => {
+  window.location.href = "{% url 'course_create' %}";
+};
+</script>
+{% endblock %}

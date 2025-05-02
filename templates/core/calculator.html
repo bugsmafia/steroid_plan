@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Анаболический калькулятор</h1>
+<form id="calc-form">
+  <!-- динамически добавляем дозы… -->
+  <button type="submit" class="btn btn-primary">Рассчитать</button>
+</form>
+<canvas id="concChart" height="100"></canvas>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/calculator.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,22 @@
+<!-- templates/core/course_form.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<h1>Создать новый курс</h1>
+<form id="course-form">
+  <div>
+    <label for="course-name">Название курса</label>
+    <input type="text" name="name" id="course-name" required />
+  </div>
+  <div>
+    <label for="course-description">Описание</label>
+    <textarea name="description" id="course-description"></textarea>
+  </div>
+  <hr />
+  <div id="drug-schedules-container"></div>
+  <button type="button" id="add-drug-btn">Добавить препарат</button>
+  <hr />
+  <button type="submit">Сохранить курс</button>
+</form>
+<script src="{% static 'core/js/course_form.js' %}"></script>
+{% endblock %}
