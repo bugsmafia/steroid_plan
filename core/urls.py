@@ -36,14 +36,10 @@ router.register(r'course-doses', CourseDoseViewSet)
 router.register(r'blood-analyses', BloodAnalysisViewSet)
 
 urlpatterns = [
-    # Frontend pages for course management
-    path('courses/', CourseListView.as_view(), name='course_list'),
-    path('courses/create/', CourseCreateView.as_view(), name='course_create'),
-    path('courses/<int:pk>/', CourseDetailView.as_view(), name='course_detail'),
-
     # API endpoints under /api/
     path('api/', include(router.urls)),
     path('api/calculator/', CalculatorAPIView.as_view(), name='calculator'),
     path('api/drugs-list/', drug_list, name='drugs_list'),
+    path('api/drugs/', drug_list, name='drugs_list'),
     path('api/drugs/<int:pk>/dosage/', drug_dosage, name='drug_dosage'),
 ]

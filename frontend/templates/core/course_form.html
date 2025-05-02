@@ -21,6 +21,9 @@
 
 
 {% endblock %}
+
+
 {% block extra_js %}
-<script src="{% static 'core/js/course_form.js' %}"></script>
+{% now "YmdHi" as build_ts %}
+<script src="{% static 'core/js/course_form.js' %}?v={{ build_ts }}"></script>
 {% endblock %}

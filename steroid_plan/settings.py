@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+APPEND_SLASH = True
 
 # DEBUG и хосты
 DEBUG = True  # Меняйте на False в production
@@ -61,7 +62,16 @@ DATABASES = {
 # Таймзона и статика
 TIME_ZONE = 'Europe/Moscow'
 USE_TZ = True
+# URL для доступа к статическим файлам
 STATIC_URL = '/static/'
+
+# Папки, где Django ищет статические файлы (например, в папке проекта или приложений)
+STATICFILES_DIRS = [
+    BASE_DIR / "frontend" / "static",  # Папка frontend/static
+]
+
+# Папка, куда будут собираться статические файлы для продакшена
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Middleware
 MIDDLEWARE = [
