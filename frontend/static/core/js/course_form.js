@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const resp = await fetch('/api/drugs/?limit=100');
       const data = await resp.json();
-      data.results.forEach(drug => {
+      data.forEach(drug => {
         const opt = document.createElement('option');
         opt.value = drug.id;
         opt.textContent = drug.name;
