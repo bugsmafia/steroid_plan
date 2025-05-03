@@ -1,6 +1,11 @@
 from django.db import transaction
+import datetime
+import math
+import warnings
+import json
+from .models import Course, CourseDrugSchedule, CourseDose
 
-def regenerate_course_schedule(course: Course):
+def regenerate_course_schedule(course: "Course"):
     all_doses = []
     for sched in course.drug_schedules.all():
         T_half = sched.drug.decayformula.life_hours

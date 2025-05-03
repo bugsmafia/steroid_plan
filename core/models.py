@@ -3,7 +3,9 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
 # from .models import Drug
 from django.contrib.postgres.fields import JSONField 
+from django.utils import timezone
 import calendar
+import datetime
 
 class User(AbstractUser):
     ROLE_CHOICES = [('standard','Standard'),('pro','Pro'),('admin','Admin')]
@@ -93,10 +95,27 @@ class Course(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="courses")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    start_time = models.DateTimeField()
-    T_total = models.PositiveIntegerField(help_text="Длительность приёма в часах")
+    description = models.TextField(
+        blank=True,
+        default="",       # даём пустую строку для уже существующих записей
+        help_text="Описание курса (опционально)"
+    )
+    start_time = models.DateTimeField(
+        default=timezone.now,
+        help_text="Время начала курса (по умолчанию — текущее)"        
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    T_total = models.PositiveIntegerField(
+        help_text="Длительность приёма в часах",
+        default=1680
+    )
     # сохраняем в raw JSON параметры, выбранные пользователем:
-    schedule_params = models.JSONField()
+    schedule_params = models.JSONField(
+        default=dict,
+        help_text="Параметры расписания (delta_t, day_of_week и т.д.)"
+    )
 
     # кеш концентрации (тут же можно хранить готовый результат calculate_concentration)
     concentration_cache = models.JSONField(blank=True, null=True)
@@ -117,7 +136,12 @@ class BloodAnalysis(models.Model):
 class CourseDrugSchedule(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="drug_schedules")
     drug = models.ForeignKey(Drug, on_delete=models.PROTECT)
-    D = models.FloatField(help_text="Доза в мг")
+    D = models.FloatField(
+        help_text="Доза в мг",
+        null=True,     # временно разрешаем пустое значение
+        blank=True,
+        default=0.0    # можно использовать default=0.0, чтобы миграция прошла сразу
+    )
     # либо fixed interval…
     delta_t = models.FloatField(blank=True, null=True, help_text="Частота в часах")
     # …либо раз в неделю в конкретный день
@@ -125,9 +149,19 @@ class CourseDrugSchedule(models.Model):
         max_length=9, blank=True, null=True,
         choices=[(d.lower(), d) for d in calendar.day_name]
     )
-    dose_time = models.TimeField()
+    dose_time = models.TimeField(
+        default=datetime.time(8, 0),
+        help_text="Время дозы (по умолчанию 08:00)"
+    )
     
 class CourseDose(models.Model):
-    schedule = models.ForeignKey(CourseDrugSchedule, on_delete=models.CASCADE, related_name="doses")
+    schedule = models.ForeignKey(
+        CourseDrugSchedule,
+        on_delete=models.CASCADE,
+        related_name="doses",
+        null=True,
+        blank=True,
+        help_text="Связь на шаблон приёма; временно может быть NULL"
+    )
     intake_dt = models.DateTimeField()
     dose_mg    = models.FloatField()  # дублируем на случай коррекции
