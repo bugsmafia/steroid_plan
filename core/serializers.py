@@ -95,7 +95,7 @@ class CourseDrugScheduleSerializer(serializers.ModelSerializer):
         ]
 
 class CourseDoseSerializer(serializers.ModelSerializer):
-    drug = DrugSerializer(read_only=True)
+    drug = serializers.CharField(source='schedule.drug.name', read_only=True)
     class Meta:
         model = CourseDose
         fields = ('id','drug','dose_mg','intake_dt')
@@ -115,22 +115,19 @@ class CourseSerializer(serializers.ModelSerializer):
             'T_total',      # теперь на курсе
             'drug_schedules',
             'doses',
-            'concentration_cache',
+            'concentration',
         ]
 
 
     def create(self, validated_data):
         schedules = validated_data.pop('drug_schedules', [])
-        # назначаем user в views.perform_create, либо здесь:
-        course = Course.objects.create(**validated_data, user=self.context['request'].user)
-
+        # user из контекста
+        user = self.context['request'].user
+        course = Course.objects.create(user=user, **validated_data)
         for sched in schedules:
             CourseDrugSchedule.objects.create(course=course, **sched)
-
-        # сохраняем кеш концентрации сразу после создания доз
         from .services import regenerate_course_schedule
         regenerate_course_schedule(course)
-
         return course
 
     def update(self, instance, validated_data):

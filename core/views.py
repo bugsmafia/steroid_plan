@@ -128,7 +128,7 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Course.objects.filter(user=self.request.user)
     def perform_create(self, serializer):
-        course = serializer.save(user=self.request.user)
+        course = serializer.save()
         regenerate_course_schedule(course)
 
     def perform_update(self, serializer):
