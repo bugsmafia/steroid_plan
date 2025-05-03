@@ -109,10 +109,6 @@ class Migration(migrations.Migration):
             name='drug',
             field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='core.drug'),
         ),
-        migrations.AlterUniqueTogether(
-            name='drugcompatibility',
-            unique_together={('drug_a', 'drug_b')},
-        ),
         migrations.RemoveField(
             model_name='coursedose',
             name='course',
