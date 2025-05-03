@@ -95,8 +95,6 @@ class Course(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     concentration_cache = models.JSONField(blank=True, null=True, help_text="{ drug_id: [{time,conc},…], … }")
 
-
-
 class BloodAnalysis(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blood_analyses')
     analysis_date = models.DateField()
@@ -105,13 +103,6 @@ class BloodAnalysis(models.Model):
     liver_enzymes = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
-class Course(models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='courses')
-    name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    # … 
 
 class CourseDrugSchedule(models.Model):
     WEEKDAYS = [

@@ -37,7 +37,8 @@ router.register(r'blood-analyses', BloodAnalysisViewSet)
 
 urlpatterns = [
     # API endpoints under /api/
-    path('api/', include(router.urls)),
+    # path('api/', include(router.urls)),
+    path('', include(router.urls)),
     path('api/calculator/', CalculatorAPIView.as_view(), name='calculator'),
     path('api/drugs-list/', drug_list, name='drugs_list'),
     path('api/drugs/', drug_list, name='drugs_list'),

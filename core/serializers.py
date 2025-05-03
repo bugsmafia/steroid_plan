@@ -77,16 +77,6 @@ class DecayFormulaSerializer(serializers.ModelSerializer):
         model = DecayFormula
         fields = ['drug','formula']
 
-class CourseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields = ['id','user','name','description','created_at']
-
-class CourseDoseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CourseDose
-        fields = ['id','course','drug','dose_mg','intake_dt']
-
 class BloodAnalysisSerializer(serializers.ModelSerializer):
     class Meta:
         model = BloodAnalysis
