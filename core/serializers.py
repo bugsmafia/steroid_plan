@@ -106,26 +106,29 @@ class CourseSerializer(serializers.ModelSerializer):
     concentration  = serializers.JSONField(source='concentration_cache', read_only=True)
 
     class Meta:
-        model = Course
+        model  = Course
         fields = [
             'id',
             'name',
             'description',
-            'start_time',   # теперь на курсе
-            'T_total',      # теперь на курсе
+            'start_time',
+            'T_total',
             'drug_schedules',
             'doses',
             'concentration',
         ]
 
-
     def create(self, validated_data):
         schedules = validated_data.pop('drug_schedules', [])
-        # user из контекста
+        # Назначаем owner здесь, один раз
         user = self.context['request'].user
         course = Course.objects.create(user=user, **validated_data)
-        for sched in schedules:
-            CourseDrugSchedule.objects.create(course=course, **sched)
+
+        # Создаём вложенные расписания
+        for sched_data in schedules:
+            CourseDrugSchedule.objects.create(course=course, **sched_data)
+
+        # Пересчитываем и кешируем концентрацию
         from .services import regenerate_course_schedule
         regenerate_course_schedule(course)
         return course
@@ -138,11 +141,10 @@ class CourseSerializer(serializers.ModelSerializer):
         instance.save()
 
         if schedules is not None:
-            # сброс и пересоздание расписания
+            # сбрасываем и создаём новые расписания
             instance.drug_schedules.all().delete()
-            for sched in schedules:
-                CourseDrugSchedule.objects.create(course=instance, **sched)
+            for sched_data in schedules:
+                CourseDrugSchedule.objects.create(course=instance, **sched_data)
             from .services import regenerate_course_schedule
             regenerate_course_schedule(instance)
-
         return instance
