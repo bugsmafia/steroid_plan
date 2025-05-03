@@ -128,12 +128,12 @@ class CourseViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Course.objects.filter(user=self.request.user)
     def perform_create(self, serializer):
-        course = serializer.save()
+        course = serializer.save(user=self.request.user)
         regenerate_course_schedule(course)
 
     def perform_update(self, serializer):
         course = serializer.save()
-        regenerate_course_schedule(course)
+        regenerate_course_schedule(dose.course)
 
 class CourseDoseViewSet(viewsets.ModelViewSet):
     queryset = CourseDose.objects.all()

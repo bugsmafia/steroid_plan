@@ -39,13 +39,3 @@ def rebuild_doses(sender, instance: CourseDrugSchedule, **kwargs):
         else:
             break
 """
-          
-@receiver(post_save, sender=Course)
-@receiver(post_delete, sender=Course)
-def on_course_change(sender, instance, **kwargs):
-    regenerate_course_schedule(instance)
-
-@receiver(post_save, sender=CourseDrugSchedule)
-@receiver(post_delete, sender=CourseDrugSchedule)
-def on_schedule_change(sender, instance, **kwargs):
-    regenerate_course_schedule(instance.course)
