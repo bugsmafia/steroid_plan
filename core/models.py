@@ -89,11 +89,16 @@ class DecayFormula(models.Model):
 
 # Courses and analyses
 class Course(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='courses')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="courses")
     name = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    concentration_cache = models.JSONField(blank=True, null=True, help_text="{ drug_id: [{time,conc},…], … }")
+    description = models.TextField(blank=True)
+    start_time = models.DateTimeField()
+    T_total = models.PositiveIntegerField(help_text="Длительность приёма в часах")
+    # сохраняем в raw JSON параметры, выбранные пользователем:
+    schedule_params = models.JSONField()
+
+    # кеш концентрации (тут же можно хранить готовый результат calculate_concentration)
+    concentration_cache = models.JSONField(blank=True, null=True)
 
 class BloodAnalysis(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blood_analyses')
@@ -105,27 +110,19 @@ class BloodAnalysis(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class CourseDrugSchedule(models.Model):
-    WEEKDAYS = [
-        (0, 'Monday'), (1, 'Tuesday'), (2, 'Wednesday'),
-        (3, 'Thursday'), (4, 'Friday'), (5, 'Saturday'), (6, 'Sunday')
-    ]
-
-    course       = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='drug_schedules')
-    drug         = models.ForeignKey(Drug, on_delete=models.CASCADE)
-    dose_mg      = models.DecimalField(max_digits=7, decimal_places=2)
-    start_time   = models.DateTimeField()
-    total_hours  = models.PositiveIntegerField(help_text="T_total в часах")
-    # именно одна из этих опций:
-    interval_h   = models.PositiveSmallIntegerField(null=True, blank=True, help_text="delta_t в часах")
-    interval_d   = models.PositiveSmallIntegerField(null=True, blank=True, help_text="дни (до 99)")
-    interval_w   = models.PositiveSmallIntegerField(null=True, blank=True, help_text="недели (до 12)")
-    weekday      = models.PositiveSmallIntegerField(null=True, blank=True, choices=WEEKDAYS)
-    dose_clock   = models.TimeField(help_text="Время приёма (HH:MM)")
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="drug_schedules")
+    drug = models.ForeignKey(Drug, on_delete=models.PROTECT)
+    D = models.FloatField(help_text="Доза в мг")
+    # либо fixed interval…
+    delta_t = models.FloatField(blank=True, null=True, help_text="Частота в часах")
+    # …либо раз в неделю в конкретный день
+    day_of_week = models.CharField(
+        max_length=9, blank=True, null=True,
+        choices=[(d.lower(), d) for d in calendar.day_name]
+    )
+    dose_time = models.TimeField()
     
 class CourseDose(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='doses')
-    drug = models.ForeignKey(Drug, on_delete=models.CASCADE)
-    dose_mg = models.DecimalField(max_digits=7, decimal_places=2)
+    schedule = models.ForeignKey(CourseDrugSchedule, on_delete=models.CASCADE, related_name="doses")
     intake_dt = models.DateTimeField()
-    class Meta:
-        unique_together = ('course','drug','intake_dt')
+    dose_mg    = models.FloatField()  # дублируем на случай коррекции

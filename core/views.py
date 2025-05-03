@@ -28,6 +28,7 @@ from .serializers import (
 
 from .utils import compute_concentration
 from .serializers import DecayFormulaSerializer
+from .services import regenerate_course_schedule  # вынесите логику в отдельный модуль
 
 
 class CalculatorAPIView(APIView):
@@ -122,16 +123,16 @@ class DecayFormulaViewSet(viewsets.ModelViewSet):
         return qs
 
 class CourseViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.all().order_by('-created_at')
+    queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    def get_queryset(self):
-        # возвращаем только курсы текущего юзера
-        return Course.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        # при создании автоматически ставим user
-        serializer.save(user=self.request.user)
+        course = serializer.save(user=self.request.user)
+        regenerate_course_schedule(course)
+
+    def perform_update(self, serializer):
+        course = serializer.save()
+        regenerate_course_schedule(course)
 
 class CourseDoseViewSet(viewsets.ModelViewSet):
     queryset = CourseDose.objects.all()

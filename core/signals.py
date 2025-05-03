@@ -1,6 +1,7 @@
-from django.db.models.signals import post_save, pre_delete
+from django.db.models.signals import post_save, pre_delete, post_delete
 from django.dispatch import receiver
-from .models import CourseDrugSchedule, CourseDose
+from .models import CourseDrugSchedule, CourseDose, Course
+from .services import regenerate_course_schedule
 import datetime
 
 @receiver(post_save, sender=CourseDrugSchedule)
@@ -37,3 +38,13 @@ def rebuild_doses(sender, instance: CourseDrugSchedule, **kwargs):
             dt += datetime.timedelta(days=7)
         else:
             break
+            
+@receiver(post_save, sender=Course)
+@receiver(post_delete, sender=Course)
+def on_course_change(sender, instance, **kwargs):
+    regenerate_course_schedule(instance)
+
+@receiver(post_save, sender=CourseDrugSchedule)
+@receiver(post_delete, sender=CourseDrugSchedule)
+def on_schedule_change(sender, instance, **kwargs):
+    regenerate_course_schedule(instance.course)

@@ -6,6 +6,13 @@
 <a href="{% url 'course-create' %}?edit={{ course_id }}" class="btn btn-secondary">
   Редактировать курс
 </a>
+<div id="reminders">
+  <h3>Сегодня</h3>
+  <ul id="today-list"></ul>
+  <h3>Завтра</h3>
+  <ul id="tomorrow-list"></ul>
+</div>
+<div id="conc-chart"></div>
 <form id="course-form">
   <div class="mb-3">
     <label for="course-name" class="form-label">Название курса</label>
@@ -24,4 +31,39 @@
 
 {% block extra_js %}
 <script src="{% static 'core/js/courses.js' %}"></script>
+<script>
+fetch('/api/courses/{id}/reminders/')
+  .then(r => r.json())
+  .then(data => {
+    ['today','tomorrow'].forEach(key => {
+      const ul = document.getElementById(key+'-list');
+      if (!data[key].length) {
+        ul.innerHTML = '<li>Прием препаратов не нужен.</li>';
+      } else {
+        ul.innerHTML = data[key].map(
+          d=>`<li>${d.time}: ${d.drug} — ${d.dose_mg} mg</li>`
+        ).join('');
+      }
+    });
+  });
+  
+  
+const ctx = document.getElementById('conc-chart').getContext('2d');
+const data = course.concentration_cache.map(item => ({
+  x: item[0],  // ISO datetime
+  y: item[3],  // C_t
+}));
+new Chart(ctx, {
+  type: 'line',
+  data: { datasets: [{ data, label: 'Концентрация (мг/Л)' }] },
+  options: {
+    parsing: false,
+    plugins: { zoom: { /* конфиг зума */ } },
+    scales: {
+      x: { type:'time', time:{ unit:'hour' } }
+    }
+  }
+});
+
+</script>
 {% endblock %}
