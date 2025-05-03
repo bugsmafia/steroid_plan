@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     dt.setHours(dt.getHours() + 1, 0, 0, 0);
     return dt.toISOString().slice(0,16);
   }
+  function getCsrfToken() {
+	return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+	}
+
 
   // Загрузка списка препаратов в select
   async function loadDrugs(select) {
@@ -148,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const resp = await fetch('/api/courses/', {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
+        headers: {'Content-Type':'application/json', 'X-CSRFToken': getCsrfToken(),},
         body: JSON.stringify(payload)
       });
       if (!resp.ok) throw new Error('Ошибка при создании');
