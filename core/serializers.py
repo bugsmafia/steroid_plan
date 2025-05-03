@@ -85,7 +85,14 @@ class BloodAnalysisSerializer(serializers.ModelSerializer):
 class CourseDrugScheduleSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseDrugSchedule
-        fields = '__all__'
+        fields = [
+            'id',
+            'drug',
+            'D',           # доза теперь называется D
+            'delta_t',     # вместо interval_h
+            'day_of_week', # вместо weekday
+            'dose_time',   # вместо dose_clock
+        ]
 
 class CourseDoseSerializer(serializers.ModelSerializer):
     drug = DrugSerializer(read_only=True)
@@ -100,4 +107,45 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('id','name','description','created_at','drug_schedules','doses','concentration')
+        fields = [
+            'id',
+            'name',
+            'description',
+            'start_time',   # теперь на курсе
+            'T_total',      # теперь на курсе
+            'drug_schedules',
+            'doses',
+            'concentration_cache',
+        ]
+
+
+    def create(self, validated_data):
+        schedules = validated_data.pop('drug_schedules', [])
+        # назначаем user в views.perform_create, либо здесь:
+        course = Course.objects.create(**validated_data, user=self.context['request'].user)
+
+        for sched in schedules:
+            CourseDrugSchedule.objects.create(course=course, **sched)
+
+        # сохраняем кеш концентрации сразу после создания доз
+        from .services import regenerate_course_schedule
+        regenerate_course_schedule(course)
+
+        return course
+
+    def update(self, instance, validated_data):
+        schedules = validated_data.pop('drug_schedules', None)
+        # обновляем поля курса
+        for attr, val in validated_data.items():
+            setattr(instance, attr, val)
+        instance.save()
+
+        if schedules is not None:
+            # сброс и пересоздание расписания
+            instance.drug_schedules.all().delete()
+            for sched in schedules:
+                CourseDrugSchedule.objects.create(course=instance, **sched)
+            from .services import regenerate_course_schedule
+            regenerate_course_schedule(instance)
+
+        return instance
