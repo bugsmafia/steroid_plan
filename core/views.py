@@ -27,7 +27,6 @@ from .serializers import (
 )
 
 from .utils import compute_concentration
-from .serializers import DecayFormulaSerializer
 from .services import regenerate_course_schedule  # вынесите логику в отдельный модуль
 
 
@@ -125,7 +124,9 @@ class DecayFormulaViewSet(viewsets.ModelViewSet):
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-
+    permission_classes = [IsAuthenticated]
+    def get_queryset(self):
+        return Course.objects.filter(user=self.request.user)
     def perform_create(self, serializer):
         course = serializer.save(user=self.request.user)
         regenerate_course_schedule(course)

@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
 # from .models import Drug
 from django.contrib.postgres.fields import JSONField 
+import calendar
 
 class User(AbstractUser):
     ROLE_CHOICES = [('standard','Standard'),('pro','Pro'),('admin','Admin')]
@@ -99,6 +100,10 @@ class Course(models.Model):
 
     # кеш концентрации (тут же можно хранить готовый результат calculate_concentration)
     concentration_cache = models.JSONField(blank=True, null=True)
+    
+    def recalc_concentration(self):
+        from .services import regenerate_course_schedule
+        regenerate_course_schedule(self)
 
 class BloodAnalysis(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blood_analyses')

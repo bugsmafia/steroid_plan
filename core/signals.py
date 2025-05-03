@@ -3,12 +3,12 @@ from django.dispatch import receiver
 from .models import CourseDrugSchedule, CourseDose, Course
 from .services import regenerate_course_schedule
 import datetime
-
+"""
 @receiver(post_save, sender=CourseDrugSchedule)
 def rebuild_doses(sender, instance: CourseDrugSchedule, **kwargs):
-    """
-    При сохранении шаблона дозирования очищаем старые и создаём новые CourseDose.
-    """
+
+    # При сохранении шаблона дозирования очищаем старые и создаём новые CourseDose.
+
     # Удаляем старые приёмы в рамках курса и шаблона
     CourseDose.objects.filter(
         course=instance.course,
@@ -38,7 +38,8 @@ def rebuild_doses(sender, instance: CourseDrugSchedule, **kwargs):
             dt += datetime.timedelta(days=7)
         else:
             break
-            
+"""
+          
 @receiver(post_save, sender=Course)
 @receiver(post_delete, sender=Course)
 def on_course_change(sender, instance, **kwargs):
