@@ -44,7 +44,11 @@
     <tr>
       <td>{{ hist.history_date|date:"Y-m-d H:i" }}</td>
       <td>{{ hist.instance.drug.name }}</td>
-      <td>{{ hist.prev_record.dose_mg if hist.prev_record }}</td>
+      {% if hist.prev_record %}
+        <td>{{ hist.prev_record.dose_mg }}</td>
+      {% else %}
+        <td>–</td>
+      {% endif %}
       <td>{{ hist.dose_mg }}</td>
       <td>{{ hist.get_history_type_display }}</td>
     </tr>
