@@ -2,7 +2,37 @@
 {% load static %}
 
 {% block content %}
-<h1>Детали курса</h1>
+<h1>Детали курса: {{ course.name }}</h1>
+<p>{{ course.description }}</p>
+
+<h2>Таблица приёмов</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Дата и время</th>
+        <th>Препарат</th>
+        <th>Доза (mg)</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for dose in doses %}
+      <tr>
+        <td>{{ dose.intake_dt|date:"Y-m-d H:i" }}</td>
+        <td>{{ dose.schedule.drug.name }}</td>
+        <td>{{ dose.dose_mg }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="3">Приёмы не найдены.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  
+  
+  
+<h2>График концентрации</h2>
+  <canvas id="concentrationChart" width="800" height="400"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
 
 <div id="reminders">
   <h3>Сегодня</h3>
@@ -62,6 +92,37 @@ new Chart(ctx, {
     }
   }
 });
+
+// Преобразуем данные для Chart.js
+    const rawData = {{ concentration_data|safe }};
+    const labels = rawData.map(item => item[0]);
+    const values = rawData.map(item => item[3]);
+
+    const ctx = document.getElementById('concentrationChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Концентрация (мг/Л)',
+          data: values,
+          fill: false,
+          tension: 0.1
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              parser: 'YYYY-MM-DDTHH:mm:ss',
+              unit: 'hour',
+              displayFormats: { hour: 'HH:mm' }
+            }
+          }
+        }
+      }
+    });
 
 </script>
 {% endblock %}

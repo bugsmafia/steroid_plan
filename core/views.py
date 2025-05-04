@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.http import JsonResponse
 from django.views.generic import TemplateView, ListView
+from django.shortcuts import get_object_or_404
 from .models import Drug, IntakeDuration, DecayFormula
 from .models import (
     User, Subscription,
@@ -178,7 +179,13 @@ class CourseDetailView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['course_id'] = kwargs.get('pk')
+        course = get_object_or_404(Course, pk=kwargs['pk'], user=self.request.user)
+        doses = CourseDose.objects.filter(schedule__course=course).order_by('intake_dt')
+        context.update({
+            'course': course,
+            'doses': doses,
+            'concentration_data': course.concentration_cache or [],
+        })
         return context
 class CourseListView(ListView):
     model = Course
