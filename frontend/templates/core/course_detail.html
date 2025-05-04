@@ -28,6 +28,32 @@
   </table>
   
   
+<h2>История изменений приёмов</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Дата события</th>
+      <th>Препарат</th>
+      <th>Старая доза</th>
+      <th>Новая доза</th>
+      <th>Тип изменения</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for hist in dose_history %}
+    <tr>
+      <td>{{ hist.history_date|date:"Y-m-d H:i" }}</td>
+      <td>{{ hist.instance.drug.name }}</td>
+      <td>{{ hist.prev_record.dose_mg if hist.prev_record }}</td>
+      <td>{{ hist.dose_mg }}</td>
+      <td>{{ hist.get_history_type_display }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">Нет изменений.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
   
 <h2>График концентрации</h2>
   <canvas id="concentrationChart" width="800" height="400"></canvas>

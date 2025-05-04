@@ -180,12 +180,18 @@ class CourseDetailView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         course = get_object_or_404(Course, pk=kwargs['pk'], user=self.request.user)
-        doses = CourseDose.objects.filter(schedule__course=course).order_by('intake_dt')
-        context.update({
-            'course': course,
-            'doses': doses,
-            'concentration_data': course.concentration_cache or [],
-        })
+        context['course'] = course
+
+        # Текущие приёмы
+        context['doses'] = CourseDose.objects.filter(schedule__course=course).order_by('intake_dt')
+        # История изменений приёмов
+        history_qs = []
+        for dose in context['doses']:
+            history_qs.extend(dose.history.all())
+        context['dose_history'] = sorted(history_qs, key=lambda h: h.history_date, reverse=True)
+
+        # Кеш концентрации для графика
+        context['concentration_data'] = course.concentration_cache or []
         return context
 class CourseListView(ListView):
     model = Course

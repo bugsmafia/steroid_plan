@@ -1,11 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 # from .models import Drug
 from django.contrib.postgres.fields import JSONField 
 from django.utils import timezone
 import calendar
 import datetime
+
+from django.contrib.auth import get_user_model
+from simple_history.models import HistoricalRecords
+
+
 
 class User(AbstractUser):
     ROLE_CHOICES = [('standard','Standard'),('pro','Pro'),('admin','Admin')]
@@ -18,6 +24,7 @@ class User(AbstractUser):
     experience = models.CharField(max_length=20, choices=EXPERIENCE_CHOICES, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+User = get_user_model()
 
 class Subscription(models.Model):
     STATUS_CHOICES = [('active','Active'),('expired','Expired'),('cancelled','Cancelled')]
@@ -37,6 +44,8 @@ class Drug(models.Model):
     name = models.CharField(max_length=255)
     group = models.ForeignKey(DrugGroup, on_delete=models.RESTRICT, related_name='drugs')
     sort = models.IntegerField(default=0)
+    def __str__(self):
+        return self.name
 
 class SideEffect(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -88,7 +97,9 @@ class DrugInfo(models.Model):
 class DecayFormula(models.Model):
     drug = models.OneToOneField(Drug, on_delete=models.CASCADE, related_name='decay_formula')
     formula = models.TextField()
-    life_hours = models.DecimalField(max_digits=7, decimal_places=1, default=0.0)
+    life_hours = models.FloatField()
+    def __str__(self):
+        return f"{self.drug.name} half-life: {self.life_hours}h"
 
 # Courses and analyses
 class Course(models.Model):
@@ -114,12 +125,17 @@ class Course(models.Model):
     # сохраняем в raw JSON параметры, выбранные пользователем:
     schedule_params = models.JSONField(
         default=dict,
+        blank=True,
         help_text="Параметры расписания (delta_t, day_of_week и т.д.)"
     )
 
     # кеш концентрации (тут же можно хранить готовый результат calculate_concentration)
     concentration_cache = models.JSONField(blank=True, null=True)
+    history = HistoricalRecords()
     
+    def __str__(self):
+        return f"{self.name} ({self.user})"
+        
     def recalc_concentration(self):
         from .services import regenerate_course_schedule
         regenerate_course_schedule(self)
@@ -134,8 +150,15 @@ class BloodAnalysis(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class CourseDrugSchedule(models.Model):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="drug_schedules")
-    drug = models.ForeignKey(Drug, on_delete=models.PROTECT)
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="drug_schedules"
+    )
+    drug = models.ForeignKey(
+        Drug,
+        on_delete=models.PROTECT
+    )
     D = models.FloatField(
         help_text="Доза в мг",
         null=True,     # временно разрешаем пустое значение
@@ -143,16 +166,26 @@ class CourseDrugSchedule(models.Model):
         default=0.0    # можно использовать default=0.0, чтобы миграция прошла сразу
     )
     # либо fixed interval…
-    delta_t = models.FloatField(blank=True, null=True, help_text="Частота в часах")
+    delta_t = models.FloatField(
+        blank=True,
+        null=True,
+        help_text="Частота в часах"
+    )
     # …либо раз в неделю в конкретный день
     day_of_week = models.CharField(
-        max_length=9, blank=True, null=True,
-        choices=[(d.lower(), d) for d in calendar.day_name]
+        max_length=9, 
+        blank=True, 
+        null=True,
+        choices=[(d.lower(), d) for d in calendar.day_name],
+        help_text='День недели (если приём 1 раз в неделю)'
     )
     dose_time = models.TimeField(
         default=datetime.time(8, 0),
         help_text="Время дозы (по умолчанию 08:00)"
     )
+    history = HistoricalRecords()
+    def __str__(self):
+        return f"{self.drug.name} @ {self.dose_time}"
     
 class CourseDose(models.Model):
     schedule = models.ForeignKey(
@@ -165,3 +198,11 @@ class CourseDose(models.Model):
     )
     intake_dt = models.DateTimeField()
     dose_mg    = models.FloatField()  # дублируем на случай коррекции
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('schedule', 'intake_dt')
+
+    def __str__(self):
+        return f"{self.schedule.drug.name} on {self.intake_dt}"
+        
