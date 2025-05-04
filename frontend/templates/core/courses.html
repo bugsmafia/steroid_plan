@@ -9,7 +9,7 @@
 <ul class="list-group">
     {% for course in courses %}
       <li class="list-group-item d-flex justify-content-between align-items-center">
-        <a href="{% url 'course_detail' course.id %}">{{ course.name }}</a>
+        <a href="{% url 'frontend:course_detail' course.id %}">{{ course.name }}</a>
         <small class="text-muted">{{ course.created_at|date:"d.m.Y H:i" }}</small>
       </li>
     {% empty %}
